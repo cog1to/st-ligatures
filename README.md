@@ -12,6 +12,10 @@ Taken with Fira Code Regular 14pt:
 
 ![fira_code](screenshots/fira-code.png)
 
+# Dependencies
+
+* Harfbuzz library & headers. Install it with your favorite package manager.
+
 # Usage
 
 Run from ST source code directory:
