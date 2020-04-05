@@ -42,10 +42,10 @@ index 0cbb002..76c5c4f 100644
  STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
 diff --git a/hb.c b/hb.c
 new file mode 100644
-index 0000000..62bd7b1
+index 0000000..bb0bea8
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,128 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -64,11 +64,16 @@ index 0000000..62bd7b1
 +} HbFontMatch;
 +
 +static int hbfontslen = 0;
-+static HbFontMatch *hbfontcache;
++static HbFontMatch *hbfontcache = NULL;
 +
 +void hbunloadfonts() {
 +	for (int i = 0; i < hbfontslen; i++)
 +		hb_font_destroy(hbfontcache[i].font);
++
++	if (hbfontcache != NULL) {
++		free(hbfontcache);
++		hbfontcache = NULL;
++	}
 +	hbfontslen = 0;
 +}
 +
@@ -171,7 +176,7 @@ index 0000000..62bd7b1
 +}
 diff --git a/hb.h b/hb.h
 new file mode 100644
-index 0000000..4505444
+index 0000000..a209238
 --- /dev/null
 +++ b/hb.h
 @@ -0,0 +1,7 @@
@@ -224,7 +229,7 @@ index a1928ca..07ba678 100644
  };
  
 diff --git a/x.c b/x.c
-index 4cf6b21..f6b09da 100644
+index 4cf6b21..447f475 100644
 --- a/x.c
 +++ b/x.c
 @@ -19,6 +19,7 @@ static char *argv0;
