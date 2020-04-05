@@ -45,7 +45,7 @@ new file mode 100644
 index 0000000..bd3fb71
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,128 @@
+@@ -0,0 +1,127 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -162,7 +162,6 @@ index 0000000..bd3fb71
 +	hb_shape(font, buffer, NULL, 0);
 +
 +	// Get new glyph info.
-+	unsigned int len = hb_buffer_get_length(buffer);
 +	hb_glyph_info_t *info = hb_buffer_get_glyph_infos(buffer, NULL);
 +
 +	// Write new codepoints.
