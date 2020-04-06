@@ -31,12 +31,12 @@ index 0cbb002..76c5c4f 100644
         `$(PKG_CONFIG) --cflags fontconfig` \
 -       `$(PKG_CONFIG) --cflags freetype2`
 +       `$(PKG_CONFIG) --cflags freetype2` \
-+			 `$(PKG_CONFIG) --cflags harfbuzz`
++       `$(PKG_CONFIG) --cflags harfbuzz`
  LIBS = -L$(X11LIB) -lm -lrt -lX11 -lutil -lXft \
         `$(PKG_CONFIG) --libs fontconfig` \
 -       `$(PKG_CONFIG) --libs freetype2`
 +       `$(PKG_CONFIG) --libs freetype2` \
-+			 `$(PKG_CONFIG) --libs harfbuzz`
++       `$(PKG_CONFIG) --libs harfbuzz`
  
  # flags
  STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
@@ -45,7 +45,7 @@ new file mode 100644
 index 0000000..bd3fb71
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,128 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -67,8 +67,10 @@ index 0000000..bd3fb71
 +static HbFontMatch *hbfontcache = NULL;
 +
 +void hbunloadfonts() {
-+	for (int i = 0; i < hbfontslen; i++)
++	for (int i = 0; i < hbfontslen; i++) {
 +		hb_font_destroy(hbfontcache[i].font);
++		XftUnlockFace(hbfontcache[i].match);
++	}
 +
 +	if (hbfontcache != NULL) {
 +		free(hbfontcache);
@@ -89,7 +91,6 @@ index 0000000..bd3fb71
 +	hb_font_t *font = hb_ft_font_create(face, NULL);
 +	if (font == NULL)
 +		die("Failed to load Harfbuzz font.");
-+	XftUnlockFace(match);
 +
 +	hbfontcache[hbfontslen].match = match;
 +	hbfontcache[hbfontslen].font = font;
