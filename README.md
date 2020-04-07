@@ -24,9 +24,11 @@ $ patch -i <patch file>
 ```
 Then compile as usual.
 
-Original patch was made for clean version of ST from latest master commit. It is not 100% compatible with Scrollback patches, so I made a modified version that you can apply on top of a Scrollback patch.
+Original patch was made for clean version of ST from latest master commit. It is not 100% compatible with Scrollback and Alpha patches, so I made a modified version that you can apply on top of a Scrollback and/or Alpha patch.
 
-There are probably more non-compatible patches, but I'm too lazy to test all of them.
+Also there's a special version compatible with Boxdraw patch.
+
+I can't maintain compatibility with all possible patch combinations, so you'll have to figure out diff conflicts yourself if you apply anything on top of what has been checked and added to this repo.
 
 # Acknowledgements
 
