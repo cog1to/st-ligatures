@@ -6,8 +6,8 @@ index 470ac86..38240da 100644
  
  include config.mk
  
--SRC = st.c x.c
-+SRC = st.c x.c hb.c
+-SRC = st.c x.c boxdraw.c
++SRC = st.c x.c boxdraw.c hb.c
  OBJ = $(SRC:.c=.o)
  
  all: options st
@@ -18,9 +18,9 @@ index 470ac86..38240da 100644
 -x.o: arg.h config.h st.h win.h
 +x.o: arg.h config.h st.h win.h hb.h
 +hb.o: st.h
+ boxdraw.o: config.h st.h boxdraw_data.h
  
  $(OBJ): config.h config.mk
- 
 diff --git a/config.mk b/config.mk
 index 0cbb002..76c5c4f 100644
 --- a/config.mk
@@ -42,10 +42,10 @@ index 0cbb002..76c5c4f 100644
  STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
 diff --git a/hb.c b/hb.c
 new file mode 100644
-index 0000000..bd3fb71
+index 0000000..bb0bea8
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,140 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -136,6 +136,10 @@ index 0000000..bd3fb71
 +	for (int i = 0, specidx = 0; i < len; i++) {
 +		if (glyphs[i].mode & ATTR_WDUMMY)
 +			continue;
++		if (glyphs[i].mode & ATTR_BOXDRAW) {
++			specidx++;
++			continue;
++		}
 +
 +		if (codepoints[i] != specs[specidx].glyph)
 +			((Glyph *)glyphs)[i].mode |= ATTR_LIGA;
@@ -184,7 +188,7 @@ index 0000000..bd3fb71
 +}
 diff --git a/hb.h b/hb.h
 new file mode 100644
-index 0000000..4505444
+index 0000000..a209238
 --- /dev/null
 +++ b/hb.h
 @@ -0,0 +1,7 @@
@@ -196,32 +200,21 @@ index 0000000..4505444
 +void hbtransform(XftGlyphFontSpec *, const Glyph *, size_t, int, int);
 +
 diff --git a/st.c b/st.c
-index 130bf22..07b2f3b 100644
+index 3e48410..e5064d6 100644
 --- a/st.c
 +++ b/st.c
-@@ -2652,9 +2652,17 @@ draw(void)
- 		cx--;
+@@ -2585,7 +2585,8 @@ draw(void)
  
  	drawregion(0, 0, term.col, term.row);
--	if (term.scr == 0)
--		xdrawcursor(cx, term.c.y, term.line[term.c.y][cx],
--				term.ocx, term.ocy, term.line[term.ocy][term.ocx]);
-+	if (term.scr == 0) {
-+		/* Draw current line to format ligatures properly. */
-+		xdrawline(term.line[term.c.y], 0, term.c.y, term.col);
-+
-+	 	xdrawcursor(cx, term.c.y, term.line[term.c.y][cx],
-+ 				term.ocx, term.ocy, term.line[term.ocy][term.ocx]);
-+
-+		/* If cursor was on a transformed glyph, we need to redraw the previous line. */
-+		if (term.ocy != term.c.y && (term.line[term.ocy][term.ocx].mode & ATTR_LIGA))
-+			xdrawline(term.line[term.ocy], 0, term.ocy, term.col);
-+  }
+ 	xdrawcursor(cx, term.c.y, term.line[term.c.y][cx],
+-			term.ocx, term.ocy, term.line[term.ocy][term.ocx]);
++			term.ocx, term.ocy, term.line[term.ocy][term.ocx],
++			term.line[term.ocy], term.col);
  	term.ocx = cx, term.ocy = term.c.y;
  	xfinishdraw();
  	xximspot(term.ocx, term.ocy);
 diff --git a/st.h b/st.h
-index 1332cf1..6b5218d 100644
+index a1928ca..07ba678 100644
 --- a/st.h
 +++ b/st.h
 @@ -11,7 +11,8 @@
@@ -238,12 +231,26 @@ index 1332cf1..6b5218d 100644
  	ATTR_WRAP       = 1 << 8,
  	ATTR_WIDE       = 1 << 9,
  	ATTR_WDUMMY     = 1 << 10,
-+	ATTR_LIGA       = 1 << 11,
+ 	ATTR_BOXDRAW    = 1 << 11,
++	ATTR_LIGA       = 1 << 12,
  	ATTR_BOLD_FAINT = ATTR_BOLD | ATTR_FAINT,
  };
  
+diff --git a/win.h b/win.h
+index a6ef1b9..bc0d180 100644
+--- a/win.h
++++ b/win.h
+@@ -25,7 +25,7 @@ enum win_mode {
+ 
+ void xbell(void);
+ void xclipcopy(void);
+-void xdrawcursor(int, int, Glyph, int, int, Glyph);
++void xdrawcursor(int, int, Glyph, int, int, Glyph, Line, int);
+ void xdrawline(Line, int, int, int);
+ void xfinishdraw(void);
+ void xloadcols(void);
 diff --git a/x.c b/x.c
-index 4cf6b21..f6b09da 100644
+index 4cf6b21..447f475 100644
 --- a/x.c
 +++ b/x.c
 @@ -19,6 +19,7 @@ static char *argv0;
@@ -283,3 +290,23 @@ index 4cf6b21..f6b09da 100644
  	return numspecs;
  }
  
+@@ -1485,14 +1492,17 @@ xdrawglyph(Glyph g, int x, int y)
+ }
+ 
+ void
+-xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
++xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og, Line line, int len)
+ {
+ 	Color drawcol;
+ 
+ 	/* remove the old cursor */
+ 	if (selected(ox, oy))
+ 		og.mode ^= ATTR_REVERSE;
+-	xdrawglyph(og, ox, oy);
++
++	/* Redraw the line where cursor was previously.
++	 * It will restore the ligatures broken by the cursor. */
++	xdrawline(line, 0, oy, len);
+ 
+ 	if (IS_SET(MODE_HIDE))
+ 		return;
