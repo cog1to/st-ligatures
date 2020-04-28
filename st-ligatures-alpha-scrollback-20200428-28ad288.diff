@@ -22,7 +22,7 @@ index 470ac86..38240da 100644
  $(OBJ): config.h config.mk
  
 diff --git a/config.mk b/config.mk
-index 0cbb002..76c5c4f 100644
+index 1d2f0e2..fd92921 100644
 --- a/config.mk
 +++ b/config.mk
 @@ -15,10 +15,12 @@ PKG_CONFIG = pkg-config
@@ -184,7 +184,7 @@ index 0000000..bd3fb71
 +}
 diff --git a/hb.h b/hb.h
 new file mode 100644
-index 0000000..4505444
+index 0000000..a209238
 --- /dev/null
 +++ b/hb.h
 @@ -0,0 +1,7 @@
@@ -196,12 +196,10 @@ index 0000000..4505444
 +void hbtransform(XftGlyphFontSpec *, const Glyph *, size_t, int, int);
 +
 diff --git a/st.c b/st.c
-index 130bf22..07b2f3b 100644
+index f8b6f67..a6c3ee7 100644
 --- a/st.c
 +++ b/st.c
-@@ -2652,9 +2652,17 @@ draw(void)
- 		cx--;
- 
+@@ -2656,7 +2656,8 @@ draw(void)
  	drawregion(0, 0, term.col, term.row);
 	if (term.scr == 0)
 		xdrawcursor(cx, term.c.y, term.line[term.c.y][cx],
@@ -212,7 +210,7 @@ index 130bf22..07b2f3b 100644
  	xfinishdraw();
  	xximspot(term.ocx, term.ocy);
 diff --git a/st.h b/st.h
-index 1332cf1..6b5218d 100644
+index c67ebc3..073ae82 100644
 --- a/st.h
 +++ b/st.h
 @@ -11,7 +11,8 @@
@@ -247,7 +245,7 @@ index a6ef1b9..bc0d180 100644
  void xfinishdraw(void);
  void xloadcols(void);
 diff --git a/x.c b/x.c
-index 4cf6b21..410994d 100644
+index 139f7ff..eaf764f 100644
 --- a/x.c
 +++ b/x.c
 @@ -19,6 +19,7 @@ static char *argv0;
@@ -258,7 +256,7 @@ index 4cf6b21..410994d 100644
  
  /* types used in config.h */
  typedef struct {
-@@ -1031,6 +1032,9 @@ xunloadfont(Font *f)
+@@ -1040,6 +1041,9 @@ xunloadfont(Font *f)
  void
  xunloadfonts(void)
  {
@@ -268,7 +266,7 @@ index 4cf6b21..410994d 100644
  	/* Free the loaded fonts in the font cache.  */
  	while (frclen > 0)
  		XftFontClose(xw.dpy, frc[--frclen].font);
-@@ -1229,7 +1233,7 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
+@@ -1246,7 +1250,7 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
  		mode = glyphs[i].mode;
  
  		/* Skip dummy wide-character spacing. */
@@ -277,7 +275,7 @@ index 4cf6b21..410994d 100644
  			continue;
  
  		/* Determine font for glyph if different from previous glyph. */
-@@ -1336,6 +1340,9 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
+@@ -1353,6 +1357,9 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
  		numspecs++;
  	}
  
@@ -287,7 +285,7 @@ index 4cf6b21..410994d 100644
  	return numspecs;
  }
  
-@@ -1485,14 +1492,17 @@ xdrawglyph(Glyph g, int x, int y)
+@@ -1502,14 +1509,17 @@ xdrawglyph(Glyph g, int x, int y)
  }
  
  void
