@@ -6,6 +6,8 @@ The code uses Harfbuzz library to transform original text of a single line to a 
 
 Due to some limitations in drawing engine, ligatures will break when crossing colors, font styles or selection. They will still render properly as separate symbols, just not as ligatures.
 
+Starting with 0.8.4, there is also an way to configure additional font features via `features` array in `hb.c`.
+
 # Example
 
 Taken with Fira Code Regular 14pt:
