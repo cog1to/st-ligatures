@@ -115,7 +115,7 @@ index 0000000..a47300e
 +hbtransform(XftGlyphFontSpec *specs, const Glyph *glyphs, size_t len, int x, int y)
 +{
 +	int start = 0, length = 1, gstart = 0;
-+	hb_codepoint_t *codepoints = calloc(len, sizeof(hb_codepoint_t));
++	hb_codepoint_t *codepoints = calloc((unsigned int)len, sizeof(hb_codepoint_t));
 +
 +	for (int idx = 1, specidx = 1; idx < len; idx++) {
 +		if (glyphs[idx].mode & ATTR_WDUMMY) {

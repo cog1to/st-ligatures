@@ -22,7 +22,7 @@ index 470ac86..38240da 100644
  $(OBJ): config.h config.mk
  
 diff --git a/config.mk b/config.mk
-index c070a4a..3d236f0 100644
+index aaa54ff..1741840 100644
 --- a/config.mk
 +++ b/config.mk
 @@ -15,10 +15,12 @@ PKG_CONFIG = pkg-config
@@ -32,7 +32,7 @@ index c070a4a..3d236f0 100644
 -       `$(PKG_CONFIG) --cflags freetype2`
 +       `$(PKG_CONFIG) --cflags freetype2` \
 +       `$(PKG_CONFIG) --cflags harfbuzz`
- LIBS = -L$(X11LIB) -lm -lrt -lX11 -lutil -lXft \
+ LIBS = -L$(X11LIB) -lm -lrt -lX11 -lutil -lXft -lXrender\
         `$(PKG_CONFIG) --libs fontconfig` \
 -       `$(PKG_CONFIG) --libs freetype2`
 +       `$(PKG_CONFIG) --libs freetype2` \
@@ -42,15 +42,14 @@ index c070a4a..3d236f0 100644
  STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
 diff --git a/hb.c b/hb.c
 new file mode 100644
-index 0000000..6389e95
+index 0000000..f9c4f76
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,144 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
 +#include <X11/Xft/Xft.h>
-+#include <X11/cursorfont.h>
 +#include <hb.h>
 +#include <hb-ft.h>
 +
@@ -69,8 +68,8 @@ index 0000000..6389e95
 +static int hbfontslen = 0;
 +static HbFontMatch *hbfontcache = NULL;
 +
-+/* 
-+ * Replace 0 with a list of font features, wrapped in FEATURE macro, e.g. 
++/*
++ * Replace 0 with a list of font features, wrapped in FEATURE macro, e.g.
 + * FEATURE('c', 'a', 'l', 't'), FEATURE('d', 'l', 'i', 'g')
 + */
 +hb_feature_t features[] = { 0 };
@@ -218,7 +217,7 @@ index 76b7e0d..e60bf58 100644
  	term.ocy = term.c.y;
  	xfinishdraw();
 diff --git a/st.h b/st.h
-index 3d351b6..06b115d 100644
+index 9f11a6a..4b72307 100644
 --- a/st.h
 +++ b/st.h
 @@ -11,7 +11,8 @@
@@ -253,7 +252,7 @@ index a6ef1b9..bc0d180 100644
  void xfinishdraw(void);
  void xloadcols(void);
 diff --git a/x.c b/x.c
-index 210f184..f6d67ef 100644
+index 73545d8..9e980e3 100644
 --- a/x.c
 +++ b/x.c
 @@ -19,6 +19,7 @@ char *argv0;
@@ -264,7 +263,7 @@ index 210f184..f6d67ef 100644
  
  /* types used in config.h */
  typedef struct {
-@@ -1031,6 +1032,9 @@ xunloadfont(Font *f)
+@@ -1040,6 +1041,9 @@ xunloadfont(Font *f)
  void
  xunloadfonts(void)
  {
@@ -274,7 +273,7 @@ index 210f184..f6d67ef 100644
  	/* Free the loaded fonts in the font cache.  */
  	while (frclen > 0)
  		XftFontClose(xw.dpy, frc[--frclen].font);
-@@ -1229,7 +1233,7 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
+@@ -1246,7 +1250,7 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
  		mode = glyphs[i].mode;
  
  		/* Skip dummy wide-character spacing. */
@@ -283,7 +282,7 @@ index 210f184..f6d67ef 100644
  			continue;
  
  		/* Determine font for glyph if different from previous glyph. */
-@@ -1336,6 +1340,9 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
+@@ -1353,6 +1357,9 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
  		numspecs++;
  	}
  
@@ -293,7 +292,7 @@ index 210f184..f6d67ef 100644
  	return numspecs;
  }
  
-@@ -1485,14 +1492,17 @@ xdrawglyph(Glyph g, int x, int y)
+@@ -1502,14 +1509,17 @@ xdrawglyph(Glyph g, int x, int y)
  }
  
  void
