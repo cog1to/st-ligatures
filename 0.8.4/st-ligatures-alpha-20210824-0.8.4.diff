@@ -45,7 +45,7 @@ new file mode 100644
 index 0000000..f9c4f76
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,144 @@
+@@ -0,0 +1,145 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -69,10 +69,11 @@ index 0000000..f9c4f76
 +static HbFontMatch *hbfontcache = NULL;
 +
 +/*
-+ * Replace 0 with a list of font features, wrapped in FEATURE macro, e.g.
++ * Poplulate the array with a list of font features, wrapped in FEATURE macro,
++ * e. g.
 + * FEATURE('c', 'a', 'l', 't'), FEATURE('d', 'l', 'i', 'g')
 + */
-+hb_feature_t features[] = { 0 };
++hb_feature_t features[] = { };
 +
 +void
 +hbunloadfonts()
@@ -176,7 +177,7 @@ index 0000000..f9c4f76
 +	}
 +
 +	/* Shape the segment. */
-+	hb_shape(font, buffer, features, sizeof(features));
++	hb_shape(font, buffer, features, sizeof(features)/sizeof(hb_feature_t));
 +
 +	/* Get new glyph info. */
 +	hb_glyph_info_t *info = hb_buffer_get_glyph_infos(buffer, NULL);
