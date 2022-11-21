@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 6dfa212..17ba987 100644
+index 6dfa212..adfa07a 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,7 +4,7 @@
@@ -11,27 +11,17 @@ index 6dfa212..17ba987 100644
  OBJ = $(SRC:.c=.o)
  
  all: options st
-@@ -19,16 +19,17 @@ config.h:
- 	cp config.def.h config.h
- 
- .c.o:
--	$(CC) $(STCFLAGS) -c $<
-+	$(CC) --debug $(STCFLAGS) -c $<
+@@ -22,8 +22,9 @@ config.h:
+ 	$(CC) $(STCFLAGS) -c $<
  
  st.o: config.h st.h win.h
 -x.o: arg.h config.h st.h win.h
 +x.o: arg.h config.h st.h win.h hb.h
-+hb.o: st.h
  boxdraw.o: config.h st.h boxdraw_data.h
++hb.o: st.h
  
  $(OBJ): config.h config.mk
  
- st: $(OBJ)
--	$(CC) -o $@ $(OBJ) $(STLDFLAGS)
-+	$(CC) --debug -o $@ $(OBJ) $(STLDFLAGS)
- 
- clean:
- 	rm -f st $(OBJ) st-$(VERSION).tar.gz
 diff --git a/config.mk b/config.mk
 index 1e306f8..3e13e53 100644
 --- a/config.mk
@@ -53,10 +43,10 @@ index 1e306f8..3e13e53 100644
  STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
 diff --git a/hb.c b/hb.c
 new file mode 100644
-index 0000000..e492620
+index 0000000..59b9200
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,106 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -128,6 +118,7 @@ index 0000000..e492620
 +	Rune rune;
 +	ushort mode = USHRT_MAX;
 +	unsigned int glyph_count;
++	int i, end = start + length;
 +
 +	hb_font_t *font = hbfindfont(xfont);
 +	if (font == NULL)
@@ -137,7 +128,7 @@ index 0000000..e492620
 +	hb_buffer_set_direction(buffer, HB_DIRECTION_LTR);
 +
 +	/* Fill buffer with codepoints. */
-+	for (int i = start; i < (start+length); i++) {
++	for (i = start; i < end; i++) {
 +		rune = glyphs[i].u;
 +		mode = glyphs[i].mode;
 +		if (mode & ATTR_WDUMMY)
@@ -160,9 +151,7 @@ index 0000000..e492620
 +
 +void hbcleanup(HbTransformData *data) {
 +	hb_buffer_destroy(data->buffer);
-+	data->glyphs = NULL;
-+	data->positions = NULL;
-+	data->count = 0;
++	memset(data, 0, sizeof(HbTransformData));
 +}
 diff --git a/hb.h b/hb.h
 new file mode 100644
@@ -226,7 +215,7 @@ index 6de960d..94679e4 100644
  void xfinishdraw(void);
  void xloadcols(void);
 diff --git a/x.c b/x.c
-index bf6bbf9..5ae1584 100644
+index bf6bbf9..440bd2a 100644
 --- a/x.c
 +++ b/x.c
 @@ -19,6 +19,7 @@ char *argv0;
@@ -278,7 +267,7 @@ index bf6bbf9..5ae1584 100644
  int
  xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x, int y)
  {
-@@ -1255,124 +1276,147 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
+@@ -1255,124 +1276,145 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
  	FcPattern *fcpattern, *fontpattern;
  	FcFontSet *fcsets[] = { NULL };
  	FcCharSet *fccharset;
@@ -288,9 +277,7 @@ index bf6bbf9..5ae1584 100644
 +
 +	/* Initial values. */
 +	mode = prevmode = glyphs[0].mode;
-+	runewidth = win.cw * ((mode & ATTR_WIDE) ? 2.0f : 1.0f);
 +	xresetfontsettings(mode, &font, &frcflags);
-+	yp = winy + font->ascent;
  
  	for (i = 0, xp = winx, yp = winy + font->ascent; i < len; ++i) {
 -		/* Fetch rune and mode for current glyph. */
@@ -530,7 +517,7 @@ index bf6bbf9..5ae1584 100644
  	}
  
  	return numspecs;
-@@ -1528,14 +1572,17 @@ xdrawglyph(Glyph g, int x, int y)
+@@ -1528,14 +1570,17 @@ xdrawglyph(Glyph g, int x, int y)
  }
  
  void
