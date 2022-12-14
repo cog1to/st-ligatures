@@ -45,7 +45,7 @@ new file mode 100644
 index 0000000..59b9200
 --- /dev/null
 +++ b/hb.c
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,107 @@
 +#include <stdlib.h>
 +#include <stdio.h>
 +#include <math.h>
@@ -143,6 +143,7 @@ index 0000000..59b9200
 +	hb_glyph_position_t *pos = hb_buffer_get_glyph_positions(buffer, &glyph_count);
 +
 +	/** Fill the output. */
++	data->buffer = buffer;
 +	data->glyphs = info;
 +	data->positions = pos;
 +	data->count = glyph_count;
