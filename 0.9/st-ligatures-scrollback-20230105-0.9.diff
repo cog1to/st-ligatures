@@ -381,7 +381,7 @@ index 2a3bd38..e66cf0c 100644
 +			/* Shape the segment. */
 +			hbtransform(&shaped, font->match, glyphs, start, length);
 +			runewidth = win.cw * ((glyphs[start].mode & ATTR_WIDE) ? 2.0f : 1.0f);
-+      cluster_xp = xp; cluster_yp = yp;
++			cluster_xp = xp; cluster_yp = yp;
 +			for (int code_idx = 0; code_idx < shaped.count; code_idx++) {
 +				int idx = shaped.glyphs[code_idx].cluster;
 +
@@ -402,8 +402,8 @@ index 2a3bd38..e66cf0c 100644
 +					specs[numspecs].glyph = shaped.glyphs[code_idx].codepoint;
 +					specs[numspecs].x = cluster_xp + (short)(shaped.positions[code_idx].x_offset / 64.);
 +					specs[numspecs].y = cluster_yp - (short)(shaped.positions[code_idx].y_offset / 64.);
-+          cluster_xp += shaped.positions[code_idx].x_advance / 64.;
-+          cluster_yp += shaped.positions[code_idx].y_advance / 64.;
++					cluster_xp += shaped.positions[code_idx].x_advance / 64.;
++					cluster_yp += shaped.positions[code_idx].y_advance / 64.;
 +					numspecs++;
 +				} else {
 +					/* If it's not found, try to fetch it through the font cache. */
