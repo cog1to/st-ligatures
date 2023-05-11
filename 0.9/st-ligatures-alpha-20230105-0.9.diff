@@ -141,7 +141,7 @@ index 0000000..528c040
 +	/* Resize the buffer if required length is larger. */
 +	if (hbrunebuffer.capacity < length) {
 +		hbrunebuffer.capacity = (length / BUFFER_STEP + 1) * BUFFER_STEP;
-+		hbrunebuffer.runes = realloc(hbrunebuffer.runes, hbrunebuffer.capacity);
++		hbrunebuffer.runes = realloc(hbrunebuffer.runes, hbrunebuffer.capacity * sizeof(Rune));
 +	}
 +
 +	/* Fill buffer with codepoints. */
