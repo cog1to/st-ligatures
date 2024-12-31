@@ -257,7 +257,7 @@ index 6de960d..94679e4 100644
  void xloadcols(void);
  int xsetcolorname(int, const char *);
 diff --git a/x.c b/x.c
-index 25785a6..1750713 100644
+index 25785a6..16d7a3a 100644
 --- a/x.c
 +++ b/x.c
 @@ -18,8 +18,9 @@
@@ -317,7 +317,7 @@ index 25785a6..1750713 100644
  	/* Xft rendering context */
  	xw.draw = XftDrawCreate(xw.dpy, xw.buf, xw.vis, xw.cmap);
  
-@@ -1240,8 +1245,24 @@ xinit(int cols, int rows)
+@@ -1240,144 +1245,155 @@ xinit(int cols, int rows)
  	if (xsel.xtarget == None)
  		xsel.xtarget = XA_STRING;
  }
@@ -342,7 +342,14 @@ index 25785a6..1750713 100644
  xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x, int y)
  {
  	float winx = borderpx + x * win.cw, winy = borderpx + y * win.ch, xp, yp;
-@@ -1254,130 +1275,128 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
+-	ushort mode, prevmode = USHRT_MAX;
++	ushort mode = glyphs[0].mode & ~ATTR_WRAP;
+ 	Font *font = &dc.font;
+ 	int frcflags = FRC_NORMAL;
+-	float runewidth = win.cw;
++	float runewidth = win.cw * ((glyphs[0].mode & ATTR_WIDE) ? 2.0f : 1.0f);
+ 	Rune rune;
+ 	FT_UInt glyphidx;
  	FcResult fcres;
  	FcPattern *fcpattern, *fontpattern;
  	FcFontSet *fcsets[] = { NULL };
@@ -357,14 +364,12 @@ index 25785a6..1750713 100644
 -		rune = glyphs[i].u;
 -		mode = glyphs[i].mode;
 +	/* Initial values. */
-+	mode = prevmode = glyphs[0].mode & ~ATTR_WRAP;
 +	xresetfontsettings(mode, &font, &frcflags);
  
 -		/* Skip dummy wide-character spacing. */
 -		if (mode == ATTR_WDUMMY)
 +	/* Shape the segment. */
 +	hbtransform(&shaped, font->match, glyphs, 0, len);
-+	runewidth = win.cw * ((glyphs[0].mode & ATTR_WIDE) ? 2.0f : 1.0f);
 +	xp = winx; yp = winy + font->ascent;
 +	cluster_xp = xp; cluster_yp = yp;
 +
@@ -396,7 +401,6 @@ index 25785a6..1750713 100644
 +			xp += runewidth;
 +			cluster_xp = xp;
 +			cluster_yp = yp;
-+			runewidth = win.cw * ((glyphs[idx].mode & ATTR_WIDE) ? 2.0f : 1.0f);
  		}
  
 -		/* Lookup character index with default font. */
@@ -481,7 +485,7 @@ index 25785a6..1750713 100644
 +			if (f >= frclen) {
 +				if (!font->set)
 +					font->set = FcFontSort(0, font->pattern,
-+																 1, 0, &fcres);
++							       1, 0, &fcres);
 +				fcsets[0] = font->set;
 +
 +				/*
@@ -573,7 +577,7 @@ index 25785a6..1750713 100644
  	    width = charlen * win.cw;
  	Color *fg, *bg, *temp, revfg, revbg, truefg, truebg;
  	XRenderColor colfg, colbg;
-@@ -1511,23 +1530,26 @@ xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len, int x, i
+@@ -1511,23 +1527,26 @@ xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len, int x, i
  void
  xdrawglyph(Glyph g, int x, int y)
  {
@@ -605,7 +609,7 @@ index 25785a6..1750713 100644
  	if (IS_SET(MODE_HIDE))
  		return;
  
-@@ -1659,30 +1681,30 @@ xdrawline(Line line, int x1, int y1, int x2)
+@@ -1659,30 +1678,30 @@ xdrawline(Line line, int x1, int y1, int x2)
  	int i, x, ox, numspecs;
  	Glyph base, new;
  	XftGlyphFontSpec *specs = xw.specbuf;
